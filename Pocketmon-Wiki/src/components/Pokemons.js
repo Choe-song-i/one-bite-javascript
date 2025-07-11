@@ -1,42 +1,56 @@
-export default function Pokemons({ $app, initialState, handleLoadMore }) {
+export default function PokemonList({
+  $app,
+  initialState,
+  handleItemClick,
+  handleTypeClick,
+}) {
   this.state = initialState;
-  this.handleLoadMore = handleLoadMore;
   this.$target = document.createElement("div");
   this.$target.className = "pokemon-list";
 
   $app.appendChild(this.$target);
+  this.handleItemClick = handleItemClick;
+  this.handleTypeClick = handleTypeClick;
 
   this.template = () => {
-    let temp = `<div class="pokemon-items-container">`;
+    let temp = [];
     if (this.state) {
-      this.state.forEach((elm) => {
-        temp += `<div class="pokemon-item" id=${elm.id}>
-                        <img src="${elm.img}"/>
-                        <div>No${elm.id}</div>
-                        <div class="pokemon-item-info">${elm.name}</div>
-                        <div class="pokemon-item-score"> ${elm.type}</div>
-                    </div> `;
+      this.state.forEach((elm, idx) => {
+        temp += `<div class="pokemon-wrapper">
+                    <div class="img-wrapper" id="${elm.id}">
+                        <img src="${elm.img}" alt="${elm.name}"></img>
+                    </div>
+                    <div class="pokemon-info">
+                        <div class="index">No.${elm.id}</div>
+                        <div class="name">${elm.name}</div>
+                        <div class="type">${elm.type}</div> 
+                    </div>
+                </div>`;
       });
-      temp += `</div>`;
     }
     return temp;
   };
+
   this.render = () => {
     this.$target.innerHTML = this.template();
-    if (!this.state.isEnd) {
-      const $loadMoreButton = document.createElement("button");
-      $loadMoreButton.className = "add-items-btn";
-      $loadMoreButton.textContent = "+ 더보기";
-      this.$target.appendChild($loadMoreButton);
-      $loadMoreButton.addEventListener("click", () => {
-        this.handleLoadMore();
+
+    this.$target.querySelectorAll("div.img-wrapper").forEach((elm) => {
+      elm.addEventListener("click", () => {
+        this.handleItemClick(elm.id);
       });
-    }
+    });
+
+    this.$target.querySelectorAll("div.type-tag").forEach((elm) => {
+      elm.addEventListener("click", () => {
+        this.handleTypeClick(elm.id);
+      });
+    });
   };
 
   this.setState = (newState) => {
     this.state = newState;
     this.render();
   };
+
   this.render();
 }

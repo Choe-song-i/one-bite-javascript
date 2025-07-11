@@ -1,54 +1,96 @@
 import PokemonList from "./components/Pokemons.js";
-
-import { request } from "./components/api.js";
+import Header from "./components/Header.js";
+import { getPokemonList } from "./components/api.js";
 
 export default function App($app) {
-  this.state = {
-    startIdx: 0,
-    sortBy: "",
-    searchWord: "",
-    type: "",
-    data: [],
+  const getSearchWord = () => {
+    if (window.location.search.includes("search=")) {
+      return window.location.search.split("search=")[1];
+    }
+    return "";
   };
 
-  const pokemonList = new PokemonList({
+  this.state = {
+    type: "",
+    pokemonList: [],
+    searchWord: getSearchWord(),
+    currentPage: window.location.pathname,
+  };
+
+  const header = new Header({
     $app,
-    initialState: this.state.data,
-    handleLoadMore: async () => {
-      const newStartIdx = this.state.startIdx + 40;
-      const newPokemons = await request(
-        newStartIdx,
+    initialState: {
+      currentPage: this.state.currentPage,
+      searchWord: this.state.searchWord,
+    },
+    handleClick: async () => {
+      history.pushState(null, null, `/`);
+      const pokemonList = await getPokemonList();
+      this.setState({
+        ...this.state,
+        pokemonList: pokemonList,
+        type: "",
+        searchWord: getSearchWord(),
+        currentPage: "/",
+      });
+    },
+    handleSearch: async (searchWord) => {
+      history.pushState(null, null, `?search=${searchWord}`);
+      const searchedPokemonList = await getPokemonList(
         this.state.type,
-        this.state.sortBy,
-        this.state.searchWord
+        searchWord
       );
       this.setState({
         ...this.state,
-        startIdx: newStartIdx,
-        data: {
-          data: [...this.state.data, ...newPokemons],
-          isEnd: newPokemons.isEnd,
-        },
+        searchWord: searchWord,
+        pokemonList: searchedPokemonList,
+        currentPage: `?search=${searchWord}`,
+      });
+    },
+  });
+
+  const pokemonList = new PokemonList({
+    $app,
+    initialState: this.state.pokemonList,
+    handleItemClick: async (id) => {
+      history.pushState(null, null, `/detail/${id}`);
+      this.setState({
+        ...this.state,
+        currentPage: `/detail/${id}`,
+      });
+    },
+    handleTypeClick: async (type) => {
+      history.pushState(null, null, `/${type}`);
+      const pokemonList = await getPokemonList(type);
+      this.setState({
+        ...this.state,
+        pokemonList: pokemonList,
+        searchWord: getSearchWord(),
+        type: type,
+        currentPage: `/${type}`,
       });
     },
   });
 
   this.setState = (newState) => {
     this.state = newState;
-    pokemonList.setState(this.state.data);
+    header.setState({
+      searchWord: this.state.searchWord,
+      currentPage: this.state.currentPage,
+    });
+    pokemonList.setState(this.state.pokemonList);
   };
 
   const init = async () => {
-    const pokemons = await request(
-      this.state.startIdx,
-      this.state.type,
-      this.state.sortBy,
-      this.state.searchWord
-    );
-    this.setState({
-      ...this.state,
-      data: pokemons,
-    });
+    try {
+      const initialPokemonList = await getPokemonList();
+      this.setState({
+        ...this.state,
+        pokemonList: initialPokemonList,
+      });
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   init();
