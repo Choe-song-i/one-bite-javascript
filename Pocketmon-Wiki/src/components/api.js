@@ -2,13 +2,30 @@ const API_URL = "https://pokemon-api-ecru-eta.vercel.app/";
 
 // 포켓몬 전체 데이터
 export const getPokemonList = async (type, searchWord) => {
-  let url = API_URL;
+  // let url = API_URL;
+  // if (type) {
+  //   url += `${type}`;
+  // }
+  // if (searchWord) {
+  //   url += `?search=${searchWord}`;
+  // }
+  // const res = await fetch(url);
+  // const pokemonList = await res.json();
+  // return pokemonList.data;
+  let url = `${API_URL}`; 
+  const params = [];
+
   if (type) {
-    url += `${type}`;
+    params.push(`type=${type}`); 
   }
   if (searchWord) {
-    url += `?search=${searchWord}`;
+    params.push(`search=${searchWord}`); 
   }
+
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
   const res = await fetch(url);
   const pokemonList = await res.json();
   return pokemonList.data;
